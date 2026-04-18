@@ -1,0 +1,23 @@
+# Example fleet config. Not wired to real plugins in phase 1 — just shows the
+# shape the config parser accepts.
+fleet:
+  name: demo
+  dataRoot: ./.devfleet
+
+plugins:
+  - { kind: runtime,   name: tmux,        id: tmux-local,   options: { sessionPrefix: df- } }
+  - { kind: agent,     name: claude-code, id: claude,       options: {} }
+  - { kind: workspace, name: worktree,    id: worktree,     options: { baseRef: main } }
+  - { kind: tracker,   name: github,      id: gh-issues,    options: { repo: you/yourrepo } }
+  - { kind: scm,       name: github,      id: gh-scm,       options: {} }
+  - { kind: notifier,  name: desktop,     id: desktop,      options: {} }
+
+agents:
+  - id: alice
+    runtime: tmux-local
+    agent: claude
+    workspace: worktree
+    tracker: gh-issues
+    scm: gh-scm
+    notifier: desktop
+    options: { label: backend }
