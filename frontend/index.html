@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevFleet | Commander Shell</title>
+  <meta name="description" content="DevFleet orchestrates multiple AI coding agents from a single YAML config. Spin up sessions, wire plugins, track CI, and command the fleet.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080a0f;
+      --panel: #0d1218;
+      --panel-2: #101821;
+      --panel-3: #131d28;
+      --text: #b8c0cc;
+      --text-strong: #dbe2ea;
+      --muted: #6d7787;
+      --line: rgba(0, 245, 212, 0.16);
+      --line-soft: rgba(245, 166, 35, 0.16);
+      --cyan: #00f5d4;
+      --amber: #f5a623;
+      --danger: #ff6258;
+      --radius: 24px;
+      --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+      --font-display: "Chakra Petch", sans-serif;
+      --font-body: "IBM Plex Serif", serif;
+      --font-mono: "DM Mono", monospace;
+      --nav-height: 82px;
+      --max: 1440px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 22% 18%, rgba(0, 245, 212, 0.16), transparent 28%),
+        radial-gradient(circle at 84% 30%, rgba(245, 166, 35, 0.09), transparent 24%),
+        linear-gradient(180deg, #090c12 0%, #080a0f 45%, #090d13 100%);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -2;
+    }
+
+    body::before {
+      opacity: 0.08;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: radial-gradient(circle at center, black 55%, transparent 95%);
+    }
+
+    body::after {
+      z-index: -1;
+      opacity: 0.06;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.7) 0.6px, transparent 0.8px),
+        radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.6) 0.5px, transparent 0.7px),
+        radial-gradient(circle at 40% 70%, rgba(255, 255, 255, 0.4) 0.7px, transparent 0.9px);
+      background-size: 170px 170px, 220px 220px, 260px 260px;
+      animation: driftGrid 18s linear infinite;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img,
+    svg {
+      display: block;
+      max-width: 100%;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    .cursor,
+    .cursor-trail {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      border-radius: 50%;
+      z-index: 200;
+      mix-blend-mode: screen;
+      transform: translate(-50%, -50%);
+    }
+
+    .cursor {
+      width: 18px;
+      height: 18px;
+      border: 1px solid rgba(0, 245, 212, 0.75);
+      box-shadow: 0 0 20px rgba(0, 245, 212, 0.35);
+    }
+
+    .cursor::before,
+    .cursor::after {
+      content: "";
+      position: absolute;
+      background: rgba(0, 245, 212, 0.75);
+    }
+
+    .cursor::before {
+      width: 1px;
+      height: 22px;
+      left: 50%;
+      top: -2px;
+      transform: translateX(-50%);
+    }
+
+    .cursor::after {
+      height: 1px;
+      width: 22px;
+      top: 50%;
+      left: -2px;
+      transform: translateY(-50%);
+    }
+
+    .cursor-trail {
+      width: 4px;
+      height: 4px;
+      background: var(--cyan);
+      box-shadow: 0 0 14px rgba(0, 245, 212, 0.8);
+    }
+
+    .shell-noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      z-index: 150;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.25) 0.7px, transparent 1px),
+        radial-gradient(circle at 80% 50%, rgba(255, 255, 255, 0.16) 0.8px, transparent 1px),
+        radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.18) 0.6px, transparent 1px);
+      background-size: 180px 180px, 220px 220px, 160px 160px;
+    }
+
+    .shell-noise::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.18;
+      background: repeating-linear-gradient(
+        180deg,
+        transparent 0,
+        transparent 2px,
+        rgba(255, 255, 255, 0.035) 3px,
+        transparent 4px
+      );
+    }
+
+    .site-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 120;
+      transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+      border-bottom: 1px solid transparent;
+    }
+
+    .site-header.scrolled {
+      background: rgba(7, 11, 17, 0.78);
+      backdrop-filter: blur(16px);
+      border-color: rgba(0, 245, 212, 0.1);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
+    }
+
+    .nav-wrap,
+    .section-inner {
+      width: min(calc(100% - 48px), var(--max));
+      margin: 0 auto;
+    }
+
+    .nav-wrap {
+      min-height: var(--nav-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      color: var(--text-strong);
+      font-family: var(--font-display);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .brand svg {
+      width: 34px;
+      height: 34px;
+    }
+
+    .brand-mark {
+      filter: drop-shadow(0 0 16px rgba(0, 245, 212, 0.35));
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .nav-links a {
+      position: relative;
+      color: var(--text);
+      transition: color 180ms ease;
+    }
+
+    .nav-links a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -8px;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 180ms ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-strong);
+    }
+
+    .nav-links a:hover::after {
+      transform: scaleX(1);
+    }
+
+    .trace-button,
+    .solid-button,
+    .ghost-button {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 22px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 245, 212, 0.28);
+      font-family: var(--font-display);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease;
+      isolation: isolate;
+    }
+
+    .trace-button {
+      color: var(--text-strong);
+      background: rgba(7, 11, 17, 0.66);
+    }
+
+    .trace-button::before,
+    .trace-button::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 1px solid transparent;
+      transition: transform 240ms ease, opacity 240ms ease;
+      pointer-events: none;
+    }
+
+    .trace-button::before {
+      border-top-color: var(--cyan);
+      border-left-color: var(--cyan);
+      transform: translate(-101%, -101%);
+    }
+
+    .trace-button::after {
+      border-right-color: var(--cyan);
+      border-bottom-color: var(--cyan);
+      transform: translate(101%, 101%);
+    }
+
+    .trace-button:hover::before,
+    .trace-button:hover::after {
+      transform: translate(0, 0);
+    }
+
+    .trace-button:hover,
+    .solid-button:hover,
+    .ghost-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 30px rgba(0, 245, 212, 0.12);
+    }
+
+    .solid-button {
+      color: #071016;
+      background: linear-gradient(135deg, var(--cyan), #57ffe7);
+      box-shadow: 0 18px 40px rgba(0, 245, 212, 0.18);
+    }
+
+    .solid-button:hover {
+      box-shadow: 0 22px 50px rgba(0, 245, 212, 0.28);
+    }
+
+    .ghost-button {
+      color: var(--text-strong);
+      background: rgba(13, 18, 24, 0.55);
+      border-color: rgba(245, 166, 35, 0.28);
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+    }
+
+    section {
+      position: relative;
+      padding: 110px 0;
+    }
+
+    .hero {
+      min-height: 100vh;
+      padding-top: calc(var(--nav-height) + 64px);
+      display: grid;
+      align-items: center;
+      overflow: clip;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      width: 680px;
+      height: 680px;
+      left: max(-120px, 8vw);
+      top: 90px;
+      background:
+        radial-gradient(circle at center, rgba(0, 245, 212, 0.28), transparent 52%),
+        radial-gradient(circle at center, rgba(0, 245, 212, 0.1), transparent 72%);
+      filter: blur(18px);
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      width: min(calc(100% - 48px), var(--max));
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.92fr);
+      gap: 48px;
+      align-items: center;
+    }
+
+    .eyebrow,
+    .section-kicker {
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      line-height: 1;
+      color: var(--cyan);
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    .hero-copy {
+      position: relative;
+      padding-right: 32px;
+      z-index: 1;
+    }
+
+    .hero h1 {
+      margin: 22px 0 22px;
+      max-width: 9.6ch;
+      color: var(--text-strong);
+      font-family: var(--font-display);
+      font-size: clamp(4.2rem, 8vw, 7.6rem);
+      line-height: 0.92;
+      text-transform: uppercase;
+      letter-spacing: -0.03em;
+    }
+
+    .hero h1 .word {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(24px);
+      animation: revealWord 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .hero h1 .line {
+      display: block;
+      overflow: hidden;
+      padding-bottom: 0.07em;
+    }
+
+    .hero-copy p {
+      max-width: 620px;
+      margin: 0;
+      font-size: 1.16rem;
+      line-height: 1.7;
+      color: #9ea8b7;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 34px;
+    }
+
+    .micro-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 30px;
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #94a0b0;
+    }
+
+    .micro-stats span {
+      position: relative;
+      padding-right: 18px;
+    }
+
+    .micro-stats span:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      right: 2px;
+      top: 50%;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(245, 166, 35, 0.8);
+      transform: translateY(-50%);
+    }
+
+    .hero-panel-wrap {
+      position: relative;
+      padding: 42px 0 12px;
+    }
+
+    .hero-panel-wrap::before {
+      content: "";
+      position: absolute;
+      inset: 0 26px 32px 70px;
+      background:
+        linear-gradient(135deg, rgba(0, 245, 212, 0.16), transparent 55%),
+        linear-gradient(225deg, rgba(245, 166, 35, 0.12), transparent 45%);
+      filter: blur(38px);
+      opacity: 0.85;
+      z-index: -1;
+    }
+
+    .hero-panel {
+      position: relative;
+      transform: rotate(1.9deg);
+      animation: floatPanel 6.5s ease-in-out infinite;
+    }
+
+    .hero-panel::after {
+      content: "";
+      position: absolute;
+      right: -22px;
+      bottom: -20px;
+      width: 78%;
+      height: 14px;
+      background: rgba(0, 0, 0, 0.42);
+      filter: blur(18px);
+      z-index: -1;
+    }
+
+    .terminal {
+      border: 1px solid rgba(0, 245, 212, 0.16);
+      background:
+        linear-gradient(180deg, rgba(15, 22, 31, 0.95), rgba(10, 14, 20, 0.97)),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02), transparent 35%);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .terminal::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 40%, transparent 60%, rgba(255, 255, 255, 0.02));
+      pointer-events: none;
+    }
+
+    .terminal-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: rgba(18, 26, 36, 0.92);
+      border-bottom: 1px solid rgba(0, 245, 212, 0.12);
+      font-family: var(--font-mono);
+      color: #7f8a98;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .terminal-dots span {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+
+    .terminal-dots span:nth-child(1) { background: var(--danger); }
+    .terminal-dots span:nth-child(2) { background: var(--amber); }
+    .terminal-dots span:nth-child(3) { background: var(--cyan); }
+
+    .terminal-body {
+      position: relative;
+      min-height: 430px;
+      padding: 28px 28px 34px;
+      font-family: var(--font-mono);
+      font-size: 0.92rem;
+      line-height: 1.9;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent),
+        repeating-linear-gradient(180deg, transparent 0, transparent 25px, rgba(255, 255, 255, 0.02) 26px);
+    }
+
+    .terminal-code {
+      margin: 0;
+      white-space: pre-wrap;
+      color: #d7dde7;
+    }
+
+    .token-comment { color: #687282; }
+    .token-key { color: var(--cyan); }
+    .token-value { color: var(--amber); }
+    .token-punctuation { color: #8f99a6; }
+    .token-symbol { color: #d7dde7; }
+    .caret {
+      display: inline-block;
+      width: 9px;
+      height: 1.15em;
+      margin-left: 2px;
+      vertical-align: -2px;
+      background: var(--cyan);
+      animation: blink 1s steps(1) infinite;
+    }
+
+    .hero-radar {
+      position: absolute;
+      right: -18px;
+      top: 16px;
+      width: 120px;
+      height: 120px;
+      border: 1px solid rgba(0, 245, 212, 0.16);
+      border-radius: 50%;
+      opacity: 0.7;
+      background:
+        radial-gradient(circle at center, rgba(0, 245, 212, 0.08), transparent 58%),
+        conic-gradient(from 210deg, transparent 0deg, rgba(0, 245, 212, 0.18) 52deg, transparent 100deg);
+      animation: spinRadar 8s linear infinite;
+    }
+
+    .hero-radar::before,
+    .hero-radar::after {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border: 1px solid rgba(0, 245, 212, 0.14);
+      border-radius: 50%;
+    }
+
+    .hero-radar::after {
+      inset: 28px;
+    }
+
+    .section-shell {
+      background: linear-gradient(180deg, rgba(12, 17, 23, 0.84), rgba(8, 11, 16, 0.86));
+      border-top: 1px solid rgba(0, 245, 212, 0.08);
+      border-bottom: 1px solid rgba(245, 166, 35, 0.08);
+    }
+
+    .problem-solution {
+      padding: 84px 0;
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    .problem-divider {
+      min-height: 100%;
+      background: linear-gradient(180deg, transparent, rgba(0, 245, 212, 0.45), transparent);
+    }
+
+    .compare-panel h2,
+    .how-header h2,
+    .plugins-header h2,
+    .observability-copy h2,
+    .config-header h2,
+    .trust-header h2,
+    .cta-block h2 {
+      margin: 14px 0 16px;
+      color: var(--text-strong);
+      font-family: var(--font-display);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      line-height: 0.95;
+    }
+
+    .compare-panel h2 {
+      font-size: clamp(2.4rem, 5vw, 4.3rem);
+    }
+
+    .compare-list {
+      list-style: none;
+      padding: 0;
+      margin: 28px 0 0;
+      display: grid;
+      gap: 18px;
+    }
+
+    .compare-list li {
+      position: relative;
+      padding-left: 28px;
+      color: #aab3c0;
+      line-height: 1.7;
+      font-size: 1.02rem;
+    }
+
+    .compare-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.82em;
+      width: 11px;
+      height: 11px;
+      border: 1px solid currentColor;
+      transform: rotate(45deg);
+    }
+
+    .compare-panel.problem li::before { color: rgba(245, 166, 35, 0.9); }
+    .compare-panel.solution li::before { color: rgba(0, 245, 212, 0.9); }
+
+    .how-it-works {
+      overflow: clip;
+    }
+
+    .how-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 32px;
+      margin-bottom: 46px;
+    }
+
+    .how-header h2,
+    .plugins-header h2,
+    .config-header h2,
+    .trust-header h2,
+    .cta-block h2 {
+      font-size: clamp(2.8rem, 5.4vw, 5.2rem);
+    }
+
+    .how-header p,
+    .plugins-header p,
+    .config-header p,
+    .trust-header p,
+    .cta-block p,
+    .observability-copy p {
+      max-width: 520px;
+      margin: 0;
+      color: #9ea8b6;
+      line-height: 1.7;
+      font-size: 1.04rem;
+    }
+
+    .flow-line {
+      position: absolute;
+      inset: 220px 0 auto;
+      width: min(calc(100% - 48px), var(--max));
+      margin: 0 auto;
+      height: 150px;
+      pointer-events: none;
+    }
+
+    .flow-line path {
+      fill: none;
+      stroke: rgba(0, 245, 212, 0.34);
+      stroke-width: 2.2;
+      stroke-dasharray: 1200;
+      stroke-dashoffset: 1200;
+      transition: stroke-dashoffset 1.4s ease;
+      filter: drop-shadow(0 0 8px rgba(0, 245, 212, 0.2));
+    }
+
+    .flow-line.visible path {
+      stroke-dashoffset: 0;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 28px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-card,
+    .plugin-card,
+    .quote-card,
+    .observe-shell,
+    .config-shell {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(0, 245, 212, 0.12);
+      background: linear-gradient(180deg, rgba(15, 21, 29, 0.92), rgba(11, 16, 22, 0.95));
+      box-shadow: var(--shadow);
+    }
+
+    .step-card {
+      min-height: 320px;
+      padding: 34px 30px 30px;
+    }
+
+    .step-number {
+      position: absolute;
+      top: -26px;
+      right: 12px;
+      font-family: var(--font-display);
+      font-size: clamp(5.5rem, 10vw, 8rem);
+      color: rgba(255, 255, 255, 0.05);
+      line-height: 1;
+    }
+
+    .step-icon {
+      width: 42px;
+      height: 42px;
+      color: var(--cyan);
+      margin-bottom: 40px;
+    }
+
+    .step-card h3,
+    .plugin-card h3,
+    .quote-card h3,
+    .observability-copy h2,
+    .config-shell h3 {
+      margin: 0 0 14px;
+      color: var(--text-strong);
+      font-family: var(--font-display);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .step-card h3 {
+      font-size: 1.5rem;
+    }
+
+    .step-card p {
+      max-width: 28ch;
+      margin: 0;
+      line-height: 1.8;
+      color: #a4afbe;
+    }
+
+    .plugins {
+      padding-top: 128px;
+    }
+
+    .plugins-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+      gap: 40px;
+      align-items: end;
+      margin-bottom: 38px;
+      position: relative;
+    }
+
+    .plugins-header::after {
+      content: "";
+      position: absolute;
+      inset: -28px 0 auto auto;
+      width: 220px;
+      height: 140px;
+      opacity: 0.18;
+      background-image:
+        linear-gradient(rgba(0, 245, 212, 0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 245, 212, 0.3) 1px, transparent 1px);
+      background-size: 18px 18px;
+      mask-image: linear-gradient(90deg, black, transparent);
+    }
+
+    .plugin-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.9fr 0.9fr;
+      gap: 22px;
+      grid-auto-rows: minmax(150px, auto);
+    }
+
+    .plugin-card {
+      padding: 26px;
+      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .plugin-card.large {
+      grid-row: span 2;
+      min-height: 324px;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .plugin-card.tall {
+      grid-row: span 2;
+      min-height: 324px;
+    }
+
+    .plugin-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(0, 245, 212, 0.32);
+      box-shadow: 0 24px 60px rgba(0, 245, 212, 0.12), inset 0 0 40px rgba(0, 245, 212, 0.03);
+    }
+
+    .plugin-card.inactive {
+      opacity: 0.72;
+      filter: saturate(0.72);
+    }
+
+    .plugin-meta,
+    .quote-role,
+    .code-label {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.6;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .plugin-card h3 {
+      font-size: 1.42rem;
+      margin-top: 12px;
+    }
+
+    .plugin-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .plugin-pill {
+      padding: 9px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: #cdd5df;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+    }
+
+    .soon {
+      display: inline-flex;
+      margin-top: 18px;
+      padding: 7px 10px;
+      border: 1px solid rgba(245, 166, 35, 0.34);
+      color: var(--amber);
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .observability .observe-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+      gap: 28px;
+      padding: 34px;
+      background:
+        linear-gradient(135deg, rgba(0, 245, 212, 0.04), transparent 28%),
+        linear-gradient(180deg, rgba(15, 21, 29, 0.92), rgba(10, 14, 20, 0.96));
+    }
+
+    .observability-copy {
+      padding-right: 30px;
+    }
+
+    .observability-copy h2 {
+      font-size: clamp(2.7rem, 5vw, 4.8rem);
+    }
+
+    .observe-list {
+      list-style: none;
+      margin: 28px 0 0;
+      padding: 0;
+      display: grid;
+      gap: 18px;
+    }
+
+    .observe-list li {
+      padding-left: 24px;
+      position: relative;
+      color: #a8b1be;
+      line-height: 1.7;
+    }
+
+    .observe-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.92em;
+      width: 12px;
+      height: 1px;
+      background: var(--cyan);
+      box-shadow: 0 0 10px rgba(0, 245, 212, 0.4);
+    }
+
+    .log-shell {
+      position: relative;
+      min-height: 420px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 245, 212, 0.12);
+      background: rgba(6, 10, 15, 0.86);
+      padding: 18px 20px;
+      font-family: var(--font-mono);
+    }
+
+    .log-shell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(8, 10, 15, 0.15), transparent 18%, transparent 82%, rgba(8, 10, 15, 0.45));
+      pointer-events: none;
+    }
+
+    .log-track {
+      display: grid;
+      gap: 8px;
+      color: #9fb0c7;
+      animation: logScroll 18s linear infinite;
+    }
+
+    .log-line {
+      white-space: nowrap;
+    }
+
+    .log-line .time { color: var(--amber); }
+    .log-line .path { color: var(--cyan); }
+    .log-line .action { color: #cfd6df; }
+
+    .config-header {
+      text-align: center;
+      margin-bottom: 34px;
+    }
+
+    .config-header p {
+      margin-inline: auto;
+    }
+
+    .config-shell {
+      padding: 18px;
+      background:
+        linear-gradient(180deg, rgba(15, 22, 30, 0.95), rgba(10, 15, 21, 0.97));
+    }
+
+    .config-shell .terminal-topbar {
+      margin: -18px -18px 0;
+    }
+
+    .code-frame {
+      position: relative;
+      overflow: hidden;
+      padding: 26px 22px 28px;
+    }
+
+    .code-frame pre {
+      margin: 0;
+      white-space: pre-wrap;
+      font-family: var(--font-mono);
+      font-size: 0.97rem;
+      line-height: 1.9;
+      color: #dfe4eb;
+    }
+
+    .code-frame::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: -20%;
+      height: 24%;
+      background: linear-gradient(180deg, transparent, rgba(0, 245, 212, 0.08), transparent);
+      animation: codeScan 6s linear infinite;
+      pointer-events: none;
+    }
+
+    .trust {
+      padding-top: 124px;
+    }
+
+    .trust-header {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(280px, 0.8fr);
+      gap: 36px;
+      align-items: end;
+      margin-bottom: 30px;
+    }
+
+    .quotes {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .quote-card {
+      padding: 28px 24px 26px;
+      border-radius: 0;
+      background:
+        linear-gradient(180deg, rgba(17, 22, 29, 0.96), rgba(10, 14, 19, 0.96)),
+        linear-gradient(90deg, rgba(0, 245, 212, 0.03), transparent);
+    }
+
+    .quote-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.08;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.18) 1px, transparent 1px);
+      background-size: 26px 26px;
+    }
+
+    .quote-card p {
+      position: relative;
+      margin: 0 0 24px;
+      color: #d5dbe3;
+      line-height: 1.75;
+      font-size: 1.03rem;
+    }
+
+    .quote-card h3 {
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+
+    .cta {
+      padding-top: 124px;
+      padding-bottom: 140px;
+    }
+
+    .cta-block {
+      text-align: center;
+      padding: 64px 32px;
+      border: 1px solid rgba(0, 245, 212, 0.14);
+      background:
+        radial-gradient(circle at 50% 10%, rgba(0, 245, 212, 0.12), transparent 35%),
+        linear-gradient(180deg, rgba(14, 20, 27, 0.96), rgba(8, 11, 16, 0.96));
+      box-shadow: var(--shadow);
+    }
+
+    .cta-actions {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+
+    .install-chip {
+      margin-top: 28px;
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      border: 1px solid rgba(245, 166, 35, 0.18);
+      background: rgba(255, 255, 255, 0.03);
+      font-family: var(--font-mono);
+      font-size: 0.92rem;
+      color: #dde3ea;
+      cursor: pointer;
+      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .install-chip:hover {
+      transform: translateY(-2px);
+      border-color: rgba(245, 166, 35, 0.38);
+      box-shadow: 0 16px 32px rgba(245, 166, 35, 0.12);
+    }
+
+    .install-chip .status {
+      color: var(--amber);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .site-footer {
+      border-top: 1px solid rgba(0, 245, 212, 0.22);
+      padding: 24px 0 28px;
+      background: rgba(7, 10, 15, 0.94);
+    }
+
+    .footer-grid {
+      width: min(calc(100% - 48px), var(--max));
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #8d97a6;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1), opacity 720ms ease;
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-left {
+      transform: translateX(-44px);
+    }
+
+    .reveal-right {
+      transform: translateX(44px);
+    }
+
+    .reveal-left.is-visible,
+    .reveal-right.is-visible {
+      transform: translateX(0);
+    }
+
+    @keyframes revealWord {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    @keyframes floatPanel {
+      0%, 100% { transform: rotate(1.9deg) translateY(0); }
+      50% { transform: rotate(1.2deg) translateY(-12px); }
+    }
+
+    @keyframes spinRadar {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes driftGrid {
+      0% { transform: translate3d(0, 0, 0); }
+      50% { transform: translate3d(-12px, 18px, 0); }
+      100% { transform: translate3d(0, 0, 0); }
+    }
+
+    @keyframes logScroll {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-50%); }
+    }
+
+    @keyframes codeScan {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(520%); }
+    }
+
+    @media (max-width: 1100px) {
+      .hero-grid,
+      .problem-grid,
+      .observability .observe-shell,
+      .plugins-header,
+      .trust-header {
+        grid-template-columns: 1fr;
+      }
+
+      .problem-grid {
+        gap: 28px;
+      }
+
+      .problem-divider {
+        width: 100%;
+        height: 1px;
+      }
+
+      .steps-grid,
+      .quotes,
+      .plugin-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .plugin-card.large,
+      .plugin-card.tall {
+        min-height: auto;
+        grid-row: span 1;
+      }
+
+      .flow-line {
+        display: none;
+      }
+
+      .hero-copy {
+        padding-right: 0;
+      }
+
+      .hero-panel {
+        transform: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        cursor: auto;
+      }
+
+      .cursor,
+      .cursor-trail,
+      .nav-links a:not(.trace-button) {
+        display: none;
+      }
+
+      .nav-wrap,
+      .section-inner,
+      .hero-grid,
+      .footer-grid {
+        width: min(calc(100% - 28px), var(--max));
+      }
+
+      section {
+        padding: 90px 0;
+      }
+
+      .hero {
+        padding-top: calc(var(--nav-height) + 34px);
+      }
+
+      .site-header {
+        background: rgba(7, 10, 15, 0.88);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid rgba(0, 245, 212, 0.08);
+      }
+
+      .nav-links {
+        gap: 12px;
+      }
+
+      .nav-links a:not(.trace-button) {
+        display: none;
+      }
+
+      .hero h1 {
+        font-size: clamp(3rem, 16vw, 4.6rem);
+      }
+
+      .hero-copy p,
+      .how-header p,
+      .plugins-header p,
+      .config-header p,
+      .trust-header p,
+      .cta-block p,
+      .observability-copy p {
+        font-size: 0.98rem;
+      }
+
+      .terminal-body {
+        min-height: 360px;
+        font-size: 0.8rem;
+        padding: 22px 18px 26px;
+      }
+
+      .observability .observe-shell,
+      .cta-block {
+        padding: 26px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+
+      .hero h1 .word,
+      .reveal,
+      .reveal-left,
+      .reveal-right {
+        opacity: 1 !important;
+        transform: none !important;
+      }
+
+      .flow-line path {
+        stroke-dashoffset: 0 !important;
+      }
+
+      body {
+        cursor: auto;
+      }
+
+      .cursor,
+      .cursor-trail {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="cursor" aria-hidden="true"></div>
+  <div class="cursor-trail" aria-hidden="true"></div>
+  <div class="shell-noise" aria-hidden="true"></div>
+
+  <header class="site-header" id="siteHeader">
+    <div class="nav-wrap">
+      <a class="brand" href="#top" aria-label="DevFleet home">
+        <svg class="brand-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M6 11.5L24 4L42 11.5V36.5L24 44L6 36.5V11.5Z" stroke="#00f5d4" stroke-width="1.5"/>
+          <path d="M24 4V44M6 11.5L24 19L42 11.5M6 24L24 31L42 24" stroke="#00f5d4" stroke-width="1.2" opacity=".72"/>
+        </svg>
+        <span>DevFleet</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#how">Docs</a>
+        <a href="#plugins">Plugins</a>
+        <a href="#footer">GitHub</a>
+        <a class="trace-button" href="#cta">Get Early Access</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow reveal is-visible">Agent Orchestration Infrastructure</div>
+          <h1 aria-label="Command your fleet. Ship while you sleep.">
+            <span class="line">
+              <span class="word" style="animation-delay: 0.05s;">Command</span>
+              <span class="word" style="animation-delay: 0.16s;">your</span>
+            </span>
+            <span class="line">
+              <span class="word" style="animation-delay: 0.27s;">fleet.</span>
+              <span class="word" style="animation-delay: 0.38s;">Ship</span>
+            </span>
+            <span class="line">
+              <span class="word" style="animation-delay: 0.49s;">while</span>
+              <span class="word" style="animation-delay: 0.60s;">you</span>
+              <span class="word" style="animation-delay: 0.71s;">sleep.</span>
+            </span>
+          </h1>
+          <p class="reveal is-visible" style="transition-delay: 160ms;">
+            DevFleet turns one YAML file into a coordinated squad of AI coding agents across workspaces, plugins, git branches, CI pipelines, and notifications. It is command infrastructure for engineers who do not need a tutorial.
+          </p>
+          <div class="hero-actions reveal is-visible" style="transition-delay: 260ms;">
+            <a class="ghost-button" href="#config">Read the Docs</a>
+            <a class="solid-button" href="#cta">Get Early Access</a>
+          </div>
+          <div class="micro-stats reveal is-visible" style="transition-delay: 360ms;">
+            <span>12 plugin slots</span>
+            <span>YAML-native</span>
+            <span>Full event log</span>
+          </div>
+        </div>
+
+        <div class="hero-panel-wrap reveal is-visible" style="transition-delay: 320ms;">
+          <div class="hero-panel">
+            <div class="hero-radar" aria-hidden="true"></div>
+            <div class="terminal" aria-label="Animated DevFleet YAML config preview">
+              <div class="terminal-topbar">
+                <div class="terminal-dots" aria-hidden="true">
+                  <span></span><span></span><span></span>
+                </div>
+                <span>devfleet.yaml / live session</span>
+              </div>
+              <div class="terminal-body">
+                <pre class="terminal-code" id="typedCode"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="problem-solution section-shell">
+      <div class="section-inner">
+        <div class="problem-grid">
+          <div class="compare-panel problem reveal-left reveal">
+            <div class="section-kicker">The Problem</div>
+            <h2>Too many moving terminals.</h2>
+            <ul class="compare-list">
+              <li>Every agent lives in its own window, with branch state and workspace context scattered everywhere.</li>
+              <li>Runtime swaps, issue trackers, and notifier wiring turn into one-off scripts nobody trusts.</li>
+              <li>No event trail means CI failures, stalled sessions, and merge readiness are all tribal knowledge.</li>
+            </ul>
+          </div>
+          <div class="problem-divider" aria-hidden="true"></div>
+          <div class="compare-panel solution reveal-right reveal">
+            <div class="section-kicker">DevFleet Fixes This</div>
+            <h2>One file. One command. Total visibility.</h2>
+            <ul class="compare-list">
+              <li>Define agents, workspaces, plugins, automation rules, and branch behavior in one readable YAML contract.</li>
+              <li>Swap Claude, GPT, local runtimes, Docker, SSH, GitHub, Linear, Jira, Slack, and webhooks without changing your workflow.</li>
+              <li>Track JSONL events, session state, and pipeline results in a single operational surface built for senior engineers.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="how-it-works" id="how">
+      <div class="section-inner">
+        <div class="how-header reveal">
+          <div>
+            <div class="section-kicker">How It Works</div>
+            <h2>Run the fleet like infrastructure.</h2>
+          </div>
+          <p>DevFleet is not another chat wrapper. It is orchestration. Define the control plane, start the fleet, monitor the work, and merge when the signal says go.</p>
+        </div>
+        <svg class="flow-line" viewBox="0 0 1320 150" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M30 98 C180 20, 320 20, 440 82 S690 144, 830 80 S1110 24, 1290 88"/>
+        </svg>
+        <div class="steps-grid">
+          <article class="step-card reveal">
+            <div class="step-number">01</div>
+            <svg class="step-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M10 12H38M10 24H28M10 36H22" stroke="currentColor" stroke-width="2"/>
+              <path d="M34 28L39 33L34 38" stroke="#f5a623" stroke-width="2"/>
+            </svg>
+            <h3>Write <code>devfleet.yaml</code></h3>
+            <p>Declare agents, workspaces, plugins, automation rules, and routing in one source-controlled config your team can actually review.</p>
+          </article>
+          <article class="step-card reveal" style="transition-delay: 120ms;">
+            <div class="step-number">02</div>
+            <svg class="step-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="8" y="10" width="14" height="14" stroke="currentColor" stroke-width="2"/>
+              <rect x="26" y="10" width="14" height="14" stroke="#f5a623" stroke-width="2"/>
+              <rect x="17" y="26" width="14" height="14" stroke="currentColor" stroke-width="2"/>
+              <path d="M22 17H26M24 24V26" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <h3>Run <code>fleet start</code></h3>
+            <p>Sessions spin up in parallel, branches materialize, plugin adapters attach, and your agents begin work without babysitting.</p>
+          </article>
+          <article class="step-card reveal" style="transition-delay: 240ms;">
+            <div class="step-number">03</div>
+            <svg class="step-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M10 34H38M10 24H22M10 14H30" stroke="currentColor" stroke-width="2"/>
+              <circle cx="34" cy="24" r="4" stroke="#f5a623" stroke-width="2"/>
+            </svg>
+            <h3>Monitor, notify, merge</h3>
+            <p>Watch JSONL events, inspect session state, catch CI regressions, route alerts, and decide when a branch is ready to land.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="plugins section-shell" id="plugins">
+      <div class="section-inner">
+        <div class="plugins-header reveal">
+          <div>
+            <div class="section-kicker">Plugin Ecosystem</div>
+            <h2>Plug in anything.</h2>
+          </div>
+          <p>Runtime, workspace, tracker, SCM, notification, terminal, and pipeline adapters are swappable by design. Your stack keeps its shape. DevFleet handles the wiring.</p>
+        </div>
+        <div class="plugin-grid">
+          <article class="plugin-card large reveal">
+            <div>
+              <div class="plugin-meta">Runtime Layer</div>
+              <h3>Claude. GPT. Local models.</h3>
+              <p>Route tasks to the runtime that matches the job. Prototype with hosted models. Run sensitive work locally. Mix both in the same fleet.</p>
+            </div>
+            <div class="plugin-items">
+              <span class="plugin-pill">Claude</span>
+              <span class="plugin-pill">GPT</span>
+              <span class="plugin-pill">Local LLM</span>
+            </div>
+          </article>
+          <article class="plugin-card reveal" style="transition-delay: 80ms;">
+            <div class="plugin-meta">Workspace</div>
+            <h3>Local · Docker · Remote SSH</h3>
+            <div class="plugin-items">
+              <span class="plugin-pill">Local</span>
+              <span class="plugin-pill">Docker</span>
+              <span class="plugin-pill">Remote SSH</span>
+            </div>
+          </article>
+          <article class="plugin-card inactive reveal" style="transition-delay: 160ms;">
+            <div class="plugin-meta">Tracker</div>
+            <h3>Linear · Jira · GitHub Issues</h3>
+            <div class="plugin-items">
+              <span class="plugin-pill">Linear</span>
+              <span class="plugin-pill">Jira</span>
+              <span class="plugin-pill">GitHub Issues</span>
+            </div>
+          </article>
+          <article class="plugin-card reveal" style="transition-delay: 220ms;">
+            <div class="plugin-meta">SCM</div>
+            <h3>Git-native branch control</h3>
+            <div class="plugin-items">
+              <span class="plugin-pill">Git</span>
+              <span class="plugin-pill">Branch Rules</span>
+            </div>
+          </article>
+          <article class="plugin-card tall reveal" style="transition-delay: 300ms;">
+            <div class="plugin-meta">Notifications</div>
+            <h3>Signal where your team already lives.</h3>
+            <p>Push state changes, failures, and merge-ready events into Slack or webhooks without bolting on a second toolchain.</p>
+            <div class="plugin-items">
+              <span class="plugin-pill">Slack</span>
+              <span class="plugin-pill">Webhook</span>
+            </div>
+            <span class="soon">Teams bridge coming soon</span>
+          </article>
+          <article class="plugin-card reveal" style="transition-delay: 380ms;">
+            <div class="plugin-meta">Terminal</div>
+            <h3>Node PTY control</h3>
+            <div class="plugin-items">
+              <span class="plugin-pill">PTY Sessions</span>
+              <span class="plugin-pill">Session Logs</span>
+            </div>
+          </article>
+          <article class="plugin-card inactive reveal" style="transition-delay: 460ms;">
+            <div class="plugin-meta">Pipeline</div>
+            <h3>CI checks wired into state</h3>
+            <div class="plugin-items">
+              <span class="plugin-pill">Checks API</span>
+              <span class="plugin-pill">Status Gates</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="observability">
+      <div class="section-inner">
+        <div class="observe-shell reveal">
+          <div class="observability-copy">
+            <div class="section-kicker">Observability</div>
+            <h2>Full visibility. Always.</h2>
+            <p>DevFleet keeps a durable operational trail. You can answer what started, what stalled, what failed CI, what merged, and which agent touched it without reconstructing history from chat tabs.</p>
+            <ul class="observe-list">
+              <li>JSONL event log for every spawn, branch, command, plugin hook, and notification.</li>
+              <li>Session state snapshots so every workspace is inspectable instead of mysterious.</li>
+              <li>CI pipeline results per task and branch, folded directly into fleet state.</li>
+            </ul>
+          </div>
+          <div class="log-shell" aria-label="Live DevFleet event log preview">
+            <div class="log-track">
+              <div class="log-line"><span class="time">[12:04:01]</span> <span class="path">fleet/api/fix-auth</span> <span class="action">→ agent:gpt spawned</span></div>
+              <div class="log-line"><span class="time">[12:04:07]</span> <span class="path">plugin/git</span> <span class="action">→ branch devfleet/fix-auth created</span></div>
+              <div class="log-line"><span class="time">[12:04:11]</span> <span class="path">workspace/docker</span> <span class="action">→ pnpm test started</span></div>
+              <div class="log-line"><span class="time">[12:04:34]</span> <span class="path">tracker/linear</span> <span class="action">→ issue DEV-142 linked</span></div>
+              <div class="log-line"><span class="time">[12:04:48]</span> <span class="path">pipeline/ci</span> <span class="action">→ checks pending</span></div>
+              <div class="log-line"><span class="time">[12:05:13]</span> <span class="path">fleet/api/fix-auth</span> <span class="action">→ test suite passed</span></div>
+              <div class="log-line"><span class="time">[12:05:26]</span> <span class="path">plugin/slack</span> <span class="action">→ merge-ready notification delivered</span></div>
+              <div class="log-line"><span class="time">[12:05:41]</span> <span class="path">fleet/web/release-notes</span> <span class="action">→ agent:claude spawned</span></div>
+              <div class="log-line"><span class="time">[12:06:05]</span> <span class="path">workspace/local</span> <span class="action">→ docs build complete</span></div>
+              <div class="log-line"><span class="time">[12:06:22]</span> <span class="path">tracker/github</span> <span class="action">→ PR #418 opened</span></div>
+              <div class="log-line"><span class="time">[12:04:01]</span> <span class="path">fleet/api/fix-auth</span> <span class="action">→ agent:gpt spawned</span></div>
+              <div class="log-line"><span class="time">[12:04:07]</span> <span class="path">plugin/git</span> <span class="action">→ branch devfleet/fix-auth created</span></div>
+              <div class="log-line"><span class="time">[12:04:11]</span> <span class="path">workspace/docker</span> <span class="action">→ pnpm test started</span></div>
+              <div class="log-line"><span class="time">[12:04:34]</span> <span class="path">tracker/linear</span> <span class="action">→ issue DEV-142 linked</span></div>
+              <div class="log-line"><span class="time">[12:04:48]</span> <span class="path">pipeline/ci</span> <span class="action">→ checks pending</span></div>
+              <div class="log-line"><span class="time">[12:05:13]</span> <span class="path">fleet/api/fix-auth</span> <span class="action">→ test suite passed</span></div>
+              <div class="log-line"><span class="time">[12:05:26]</span> <span class="path">plugin/slack</span> <span class="action">→ merge-ready notification delivered</span></div>
+              <div class="log-line"><span class="time">[12:05:41]</span> <span class="path">fleet/web/release-notes</span> <span class="action">→ agent:claude spawned</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="config section-shell" id="config">
+      <div class="section-inner">
+        <div class="config-header reveal">
+          <div class="section-kicker">Config Showcase</div>
+          <h2>One file to rule the fleet.</h2>
+          <p>The control plane stays readable. Senior engineers can scan this in seconds, see the topology, and know exactly what will happen when the fleet starts.</p>
+        </div>
+        <div class="config-shell reveal">
+          <div class="terminal-topbar">
+            <div class="terminal-dots" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+            <span>devfleet.yaml / orchestration contract</span>
+          </div>
+          <div class="code-frame">
+<pre><span class="token-comment"># Command the entire engineering fleet from one file</span>
+<span class="token-key">project</span><span class="token-punctuation">:</span> <span class="token-value">devfleet</span>
+<span class="token-key">defaultRuntime</span><span class="token-punctuation">:</span> <span class="token-value">gpt</span>
+<span class="token-key">eventLog</span><span class="token-punctuation">:</span> <span class="token-value">./.devfleet/events.jsonl</span>
+
+<span class="token-key">workspaces</span><span class="token-punctuation">:</span>
+  <span class="token-key">api</span><span class="token-punctuation">:</span>
+    <span class="token-key">provider</span><span class="token-punctuation">:</span> <span class="token-value">docker</span>
+    <span class="token-key">image</span><span class="token-punctuation">:</span> <span class="token-value">node:20-bookworm</span>
+  <span class="token-key">web</span><span class="token-punctuation">:</span>
+    <span class="token-key">provider</span><span class="token-punctuation">:</span> <span class="token-value">local</span>
+    <span class="token-key">path</span><span class="token-punctuation">:</span> <span class="token-value">./apps/web</span>
+
+<span class="token-key">agents</span><span class="token-punctuation">:</span>
+  <span class="token-key">fix-auth</span><span class="token-punctuation">:</span>
+    <span class="token-key">runtime</span><span class="token-punctuation">:</span> <span class="token-value">gpt</span>
+    <span class="token-key">workspace</span><span class="token-punctuation">:</span> <span class="token-value">api</span>
+    <span class="token-key">branch</span><span class="token-punctuation">:</span> <span class="token-value">devfleet/fix-auth</span>
+    <span class="token-key">task</span><span class="token-punctuation">:</span> <span class="token-value">Harden session refresh and patch flaky auth tests</span>
+  <span class="token-key">release-notes</span><span class="token-punctuation">:</span>
+    <span class="token-key">runtime</span><span class="token-punctuation">:</span> <span class="token-value">claude</span>
+    <span class="token-key">workspace</span><span class="token-punctuation">:</span> <span class="token-value">web</span>
+    <span class="token-key">branch</span><span class="token-punctuation">:</span> <span class="token-value">devfleet/release-notes</span>
+
+<span class="token-key">plugins</span><span class="token-punctuation">:</span>
+  <span class="token-key">tracker</span><span class="token-punctuation">:</span> <span class="token-value">linear</span>
+  <span class="token-key">scm</span><span class="token-punctuation">:</span> <span class="token-value">git</span>
+  <span class="token-key">notifier</span><span class="token-punctuation">:</span> <span class="token-value">slack</span>
+  <span class="token-key">pipeline</span><span class="token-punctuation">:</span> <span class="token-value">github-checks</span>
+
+<span class="token-key">automation</span><span class="token-punctuation">:</span>
+  <span class="token-key">onTaskReady</span><span class="token-punctuation">:</span> <span class="token-value">run: pnpm test</span>
+  <span class="token-key">onChecksGreen</span><span class="token-punctuation">:</span> <span class="token-value">notify: slack</span>
+  <span class="token-key">onMergeReady</span><span class="token-punctuation">:</span> <span class="token-value">openPullRequest: true</span></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="trust">
+      <div class="section-inner">
+        <div class="trust-header reveal">
+          <div>
+            <div class="section-kicker">Trust Bar</div>
+            <h2>Built for engineers who move fast.</h2>
+          </div>
+          <p>The right people do not want inspirational copy. They want evidence that the tool respects complexity, keeps logs, and stays out of the way.</p>
+        </div>
+        <div class="quotes">
+          <article class="quote-card reveal">
+            <p>“Most agent tools feel like demos. DevFleet feels like infra. I can see the branches, the sessions, the checks, and the failure trail without opening six windows.”</p>
+            <h3>Staff Engineer</h3>
+            <div class="quote-role">Platform Systems</div>
+          </article>
+          <article class="quote-card reveal" style="transition-delay: 90ms;">
+            <p>“The YAML is the product. That is why it works. We review the fleet topology like code, swap plugins when the stack changes, and the rest stays predictable.”</p>
+            <h3>CTO</h3>
+            <div class="quote-role">Developer Tools Startup</div>
+          </article>
+          <article class="quote-card reveal" style="transition-delay: 180ms;">
+            <p>“What sold me was observability. Every agent event, every CI result, every notifier hop was already there. No mystery state. No hand-holding.”</p>
+            <h3>Platform Lead</h3>
+            <div class="quote-role">Distributed Applications</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta section-shell" id="cta">
+      <div class="section-inner">
+        <div class="cta-block reveal">
+          <div class="section-kicker">Launch Sequence</div>
+          <h2>Your fleet is ready.</h2>
+          <p>Start orchestrating agents in under five minutes. Define the config, wire the plugins, and run a command surface that behaves like engineering infrastructure instead of marketing software.</p>
+          <div class="cta-actions">
+            <a class="solid-button" href="mailto:hello@devfleet.dev?subject=Early%20Access">Get Early Access →</a>
+          </div>
+          <button class="install-chip" id="copyInstall" type="button" aria-label="Copy install command">
+            <span>npm install -g devfleet</span>
+            <span class="status" id="copyStatus">Click to copy</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="footer">
+    <div class="footer-grid">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M6 11.5L24 4L42 11.5V36.5L24 44L6 36.5V11.5Z" stroke="#00f5d4" stroke-width="1.5"/>
+          <path d="M24 4V44M6 11.5L24 19L42 11.5M6 24L24 31L42 24" stroke="#00f5d4" stroke-width="1.2" opacity=".72"/>
+        </svg>
+        <span>Built for the fleet.</span>
+      </div>
+      <div class="footer-links">
+        <a href="#top">GitHub</a>
+        <a href="#how">Docs</a>
+        <a href="#top">Twitter/X</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const typedCode = document.getElementById("typedCode");
+    const codeTokens = [
+      ["comment", "# devfleet.yaml"],
+      ["plain", "\n"],
+      ["key", "project"], ["punctuation", ":"], ["plain", " "], ["value", "commander-shell"], ["plain", "\n"],
+      ["key", "runtimes"], ["punctuation", ":"], ["plain", "\n"],
+      ["plain", "  "], ["key", "primary"], ["punctuation", ":"], ["plain", " "], ["value", "gpt"], ["plain", "\n"],
+      ["plain", "  "], ["key", "reviewer"], ["punctuation", ":"], ["plain", " "], ["value", "claude"], ["plain", "\n"],
+      ["key", "workspaces"], ["punctuation", ":"], ["plain", "\n"],
+      ["plain", "  "], ["key", "api"], ["punctuation", ":"], ["plain", " "], ["value", "docker"], ["plain", "\n"],
+      ["plain", "  "], ["key", "web"], ["punctuation", ":"], ["plain", " "], ["value", "local"], ["plain", "\n"],
+      ["key", "agents"], ["punctuation", ":"], ["plain", "\n"],
+      ["plain", "  "], ["key", "fix-auth"], ["punctuation", ":"], ["plain", "\n"],
+      ["plain", "    "], ["key", "task"], ["punctuation", ":"], ["plain", " "], ["value", "\"Patch auth refresh race\""], ["plain", "\n"],
+      ["plain", "    "], ["key", "workspace"], ["punctuation", ":"], ["plain", " "], ["value", "api"], ["plain", "\n"],
+      ["plain", "  "], ["key", "release-notes"], ["punctuation", ":"], ["plain", "\n"],
+      ["plain", "    "], ["key", "task"], ["punctuation", ":"], ["plain", " "], ["value", "\"Draft changelog + docs\""], ["plain", "\n"],
+      ["plain", "    "], ["key", "workspace"], ["punctuation", ":"], ["plain", " "], ["value", "web"], ["plain", "\n"],
+      ["key", "plugins"], ["punctuation", ":"], ["plain", "\n"],
+      ["plain", "  "], ["key", "tracker"], ["punctuation", ":"], ["plain", " "], ["value", "linear"], ["plain", "\n"],
+      ["plain", "  "], ["key", "notifier"], ["punctuation", ":"], ["plain", " "], ["value", "slack"], ["plain", "\n"],
+      ["plain", "  "], ["key", "pipeline"], ["punctuation", ":"], ["plain", " "], ["value", "github-checks"], ["plain", "\n"]
+    ];
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function renderTypedContent(index) {
+      const html = codeTokens.slice(0, index).map(([type, text]) => {
+        if (type === "plain") {
+          return escapeHtml(text);
+        }
+        return '<span class="token-' + type + '">' + escapeHtml(text) + "</span>";
+      }).join("");
+      typedCode.innerHTML = html + '<span class="caret"></span>';
+    }
+
+    function startTyping() {
+      if (!typedCode) return;
+      if (reduceMotion) {
+        renderTypedContent(codeTokens.length);
+        return;
+      }
+      let index = 0;
+      let timeout = 0;
+      const step = () => {
+        renderTypedContent(index);
+        index += 1;
+        if (index <= codeTokens.length) {
+          const current = codeTokens[index - 1]?.[1] || "";
+          timeout = current === "\n" ? 110 : current.length > 10 ? 80 : 45;
+          window.setTimeout(step, timeout);
+        } else {
+          window.setTimeout(() => {
+            index = 0;
+            typedCode.innerHTML = "";
+            step();
+          }, 1600);
+        }
+      };
+      step();
+    }
+
+    startTyping();
+
+    const header = document.getElementById("siteHeader");
+    const observerTargets = document.querySelectorAll(".reveal, .reveal-left, .reveal-right");
+    const flowLine = document.querySelector(".flow-line");
+
+    function updateHeader() {
+      if (window.scrollY > window.innerHeight * 0.55) {
+        header.classList.add("scrolled");
+      } else {
+        header.classList.remove("scrolled");
+      }
+    }
+
+    updateHeader();
+    window.addEventListener("scroll", updateHeader, { passive: true });
+
+    if (!reduceMotion && "IntersectionObserver" in window) {
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+          }
+        });
+      }, { threshold: 0.18, rootMargin: "0px 0px -10% 0px" });
+
+      observerTargets.forEach((target) => {
+        if (!target.classList.contains("is-visible")) {
+          revealObserver.observe(target);
+        }
+      });
+
+      if (flowLine) {
+        const flowObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              flowLine.classList.add("visible");
+            }
+          });
+        }, { threshold: 0.4 });
+        flowObserver.observe(flowLine);
+      }
+    } else {
+      observerTargets.forEach((target) => target.classList.add("is-visible"));
+      if (flowLine) {
+        flowLine.classList.add("visible");
+      }
+    }
+
+    const cursor = document.querySelector(".cursor");
+    const trail = document.querySelector(".cursor-trail");
+    if (!reduceMotion && cursor && trail && window.innerWidth > 768) {
+      let mouseX = window.innerWidth / 2;
+      let mouseY = window.innerHeight / 2;
+      let trailX = mouseX;
+      let trailY = mouseY;
+
+      window.addEventListener("mousemove", (event) => {
+        mouseX = event.clientX;
+        mouseY = event.clientY;
+        cursor.style.left = mouseX + "px";
+        cursor.style.top = mouseY + "px";
+      }, { passive: true });
+
+      function animateTrail() {
+        trailX += (mouseX - trailX) * 0.18;
+        trailY += (mouseY - trailY) * 0.18;
+        trail.style.left = trailX + "px";
+        trail.style.top = trailY + "px";
+        requestAnimationFrame(animateTrail);
+      }
+
+      animateTrail();
+    }
+
+    const copyInstall = document.getElementById("copyInstall");
+    const copyStatus = document.getElementById("copyStatus");
+    if (copyInstall && copyStatus) {
+      copyInstall.addEventListener("click", async () => {
+        const value = "npm install -g devfleet";
+        try {
+          await navigator.clipboard.writeText(value);
+          copyStatus.textContent = "Copied!";
+          window.setTimeout(() => {
+            copyStatus.textContent = "Click to copy";
+          }, 1400);
+        } catch (error) {
+          copyStatus.textContent = "Clipboard blocked";
+          window.setTimeout(() => {
+            copyStatus.textContent = "Click to copy";
+          }, 1400);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
