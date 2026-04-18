@@ -1,4 +1,4 @@
-/** Public entry point for @devfleet/core. */
+/** Public entry point for @devfleet/core. Phase 1. */
 
 export type {
   PluginKind,
