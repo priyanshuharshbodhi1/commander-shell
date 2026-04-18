@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import type { SessionStatus } from '@devfleet/core';
+import type { SessionStatus } from '@commander/core';
 
 export const STATUS_COLORS: Record<SessionStatus, (s: string) => string> = {
   pending:   chalk.blue,

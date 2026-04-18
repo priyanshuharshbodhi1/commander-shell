@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { DataStore } from '@devfleet/core';
-import type { Session, SessionStatus } from '@devfleet/core';
+import { DataStore } from '@commander/core';
+import type { Session, SessionStatus } from '@commander/core';
 import os from 'node:os';
 import path from 'node:path';
 import { renderFleetTable } from '../ui/table.js';

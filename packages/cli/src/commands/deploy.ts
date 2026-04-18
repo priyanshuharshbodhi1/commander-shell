@@ -5,7 +5,7 @@ import { access, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import open from 'open';
-import { DataStore } from '@devfleet/core';
+import { DataStore } from '@commander/core';
 import { loadConfig, CONFIG_FILE } from '../config.js';
 import { withSpinner } from '../ui/spinner.js';
 import { runChecks } from './health.js';

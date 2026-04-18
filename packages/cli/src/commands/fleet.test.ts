@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderFleetTable } from '../ui/table.js';
-import type { Session } from '@devfleet/core';
+import type { Session } from '@commander/core';
 
 function makeSession(overrides: Partial<Session> = {}): Session {
   const now = new Date().toISOString();

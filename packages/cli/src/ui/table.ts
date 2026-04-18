@@ -1,5 +1,5 @@
 import Table from 'cli-table3';
-import type { Session } from '@devfleet/core';
+import type { Session } from '@commander/core';
 import { STATUS_COLORS } from './colors.js';
 
 export function relativeTime(isoString: string): string {
@@ -18,7 +18,7 @@ export function renderFleetTable(sessions: Session[]): string {
   });
 
   for (const s of sessions) {
-    const colorFn = STATUS_COLORS[s.status];
+    const colorFn = STATUS_COLORS[s.status] ?? ((v: string) => v);
     table.push([
       s.id,
       s.agentId,

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { parseConfig } from '@devfleet/core';
-import type { FleetConfig } from '@devfleet/core';
+import { parseConfig } from '@commander/core';
+import type { FleetConfig } from '@commander/core';
 
 export const CONFIG_FILE = 'commander.config.yaml';
 

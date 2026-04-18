@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { relativeTime, renderFleetTable } from './table.js';
-import type { Session } from '@devfleet/core';
+import type { Session } from '@commander/core';
 
 function ago(seconds: number): string {
   return new Date(Date.now() - seconds * 1000).toISOString();
