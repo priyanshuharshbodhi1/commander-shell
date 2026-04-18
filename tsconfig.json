@@ -3,6 +3,11 @@
   "references": [
     { "path": "./packages/core" },
     { "path": "./packages/cli" },
-    { "path": "./packages/web" }
+    { "path": "./packages/web" },
+    { "path": "./plugins/runtime-tmux" },
+    { "path": "./plugins/agent-claude" },
+    { "path": "./plugins/agent-codex" },
+    { "path": "./plugins/workspace-worktree" },
+    { "path": "./plugins/scm-github" }
   ]
 }
