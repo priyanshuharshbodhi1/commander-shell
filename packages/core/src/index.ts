@@ -18,3 +18,26 @@ export { PluginHub, PluginNotFoundError, PluginConflictError } from './plugin-hu
 export { DataStore } from './data-store.js';
 export { FleetEmitter, type Unsubscribe } from './fleet-emitter.js';
 export { EventJournal } from './event-journal.js';
+
+export type {
+  Project,
+  Issue,
+  RuntimeStartOpts,
+  RuntimePlugin,
+  AgentCommandOpts,
+  AgentPlugin,
+  WorkspaceInfo,
+  WorkspacePlugin,
+  CICheckState,
+  CIOverallState,
+  ReviewState,
+  PRState,
+  CICheck,
+  CIStatus,
+  ReviewComment,
+  PRData,
+  CreatePROpts,
+  SCMPlugin,
+  ExecaResult,
+  ExecaFn,
+} from './plugin-interfaces.js';
