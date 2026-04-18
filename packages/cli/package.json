@@ -3,20 +3,29 @@
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "fleet": "./dist/index.js"
+    "commander": "./dist/bin/commander.js"
   },
   "files": ["dist"],
   "scripts": {
     "build": "tsc -b",
+    "postbuild": "chmod +x dist/bin/commander.js",
     "typecheck": "tsc --noEmit",
     "test": "node --test --import tsx 'src/**/*.test.ts' || true",
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@devfleet/core": "workspace:*"
+    "@devfleet/core": "workspace:*",
+    "commander": "^12.0.0",
+    "yaml": "^2.4.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.0",
+    "inquirer": "^9.2.0",
+    "open": "^10.1.0",
+    "cli-table3": "^0.6.3",
+    "execa": "^9.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
+"@types/node": "^22.10.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }
