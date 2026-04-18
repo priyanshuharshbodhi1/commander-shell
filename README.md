@@ -1,8 +1,8 @@
-# devfleet
+# commander
 
 > Commander shell for a fleet of AI coding agents. One config, many agents, any repo, any tracker.
 
-`devfleet` lets you declare a fleet of coding agents in a single YAML file, then commands them from one place — spawning sessions, routing reactions from your issue tracker, capturing everything to a replayable event journal. Every runtime, agent, workspace, tracker, SCM, and notifier is a plugin.
+`commander` lets you declare a fleet of coding agents in a single YAML file, then commands them from one place — spawning sessions, routing reactions from your issue tracker, capturing everything to a replayable event journal. Every runtime, agent, workspace, tracker, SCM, and notifier is a plugin.
 
 ## Status
 
@@ -19,9 +19,9 @@ pnpm build
 
 ```
 packages/
-  core/        @devfleet/core — plugin hub, config, data store, signals, journal
-  cli/         @devfleet/cli  — fleet command (stub in phase 1)
-  web/         @devfleet/web  — dashboard (stub in phase 1)
+  core/        @commander/core — plugin hub, config, data store, signals, journal
+  cli/         @commander/cli  — fleet command (stub in phase 1)
+  web/         @commander/web  — dashboard (stub in phase 1)
 ```
 
 ## Concepts

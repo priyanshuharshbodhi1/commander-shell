@@ -2,7 +2,7 @@
 # shape the config parser accepts.
 fleet:
   name: demo
-  dataRoot: ./.devfleet
+  dataRoot: ./.commander
 
 plugins:
   - { kind: runtime,   name: tmux,        id: tmux-local,   options: { sessionPrefix: df- } }

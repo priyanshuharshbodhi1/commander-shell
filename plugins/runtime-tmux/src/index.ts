@@ -4,9 +4,9 @@ import type {
   RuntimePlugin,
   RuntimeStartOpts,
   Session,
-} from '@devfleet/core';
+} from '@commander/core';
 
-const PREFIX = 'devfleet-';
+const PREFIX = 'commander-';
 
 export class TmuxRuntime implements RuntimePlugin {
   constructor(private readonly execa: ExecaFn) {}

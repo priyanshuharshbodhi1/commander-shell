@@ -17,7 +17,7 @@ importers:
 
   packages/cli:
     dependencies:
-      '@devfleet/core':
+      '@commander/core':
         specifier: workspace:*
         version: link:../core
       chalk:
@@ -73,7 +73,7 @@ importers:
 
   packages/web:
     dependencies:
-      '@devfleet/core':
+      '@commander/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -89,7 +89,7 @@ importers:
 
   plugins/agent-claude:
     dependencies:
-      '@devfleet/core':
+      '@commander/core':
         specifier: workspace:*
         version: link:../../packages/core
     devDependencies:
@@ -102,7 +102,7 @@ importers:
 
   plugins/agent-codex:
     dependencies:
-      '@devfleet/core':
+      '@commander/core':
         specifier: workspace:*
         version: link:../../packages/core
     devDependencies:
@@ -115,7 +115,7 @@ importers:
 
   plugins/runtime-tmux:
     dependencies:
-      '@devfleet/core':
+      '@commander/core':
         specifier: workspace:*
         version: link:../../packages/core
       execa:
@@ -131,7 +131,7 @@ importers:
 
   plugins/scm-github:
     dependencies:
-      '@devfleet/core':
+      '@commander/core':
         specifier: workspace:*
         version: link:../../packages/core
       execa:
@@ -147,7 +147,7 @@ importers:
 
   plugins/workspace-worktree:
     dependencies:
-      '@devfleet/core':
+      '@commander/core':
         specifier: workspace:*
         version: link:../../packages/core
       execa:

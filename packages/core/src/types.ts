@@ -1,10 +1,10 @@
 /**
- * Core domain types for devfleet. Everything in the system is expressed in
+ * Core domain types for commander. Everything in the system is expressed in
  * these terms: plugins produce capabilities, fleets compose plugins, sessions
  * track running work, signals move state, journal entries record history.
  */
 
-/** The six plugin capability kinds devfleet supports. */
+/** The six plugin capability kinds commander supports. */
 export type PluginKind =
   | 'runtime'
   | 'agent'

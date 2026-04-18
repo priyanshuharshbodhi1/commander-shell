@@ -5,9 +5,9 @@ import type {
   Project,
   WorkspaceInfo,
   WorkspacePlugin,
-} from '@devfleet/core';
+} from '@commander/core';
 
-export const WORKTREES_DIR = 'devfleet-worktrees';
+export const WORKTREES_DIR = 'commander-worktrees';
 
 export interface FsOps {
   mkdirSync(dir: string, opts?: { recursive?: boolean }): void;

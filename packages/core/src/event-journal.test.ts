@@ -6,7 +6,7 @@ import path from 'node:path';
 import { EventJournal } from './event-journal.js';
 
 async function scratch(): Promise<{ dir: string; cleanup: () => Promise<void> }> {
-  const dir = await mkdtemp(path.join(os.tmpdir(), 'devfleet-ej-'));
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'commander-ej-'));
   return { dir, cleanup: () => rm(dir, { recursive: true, force: true }) };
 }
 

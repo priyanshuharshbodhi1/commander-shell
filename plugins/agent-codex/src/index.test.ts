@@ -22,6 +22,6 @@ test('CodexAgent.buildPrompt mirrors claude prompt structure', () => {
     { id: 'svc', repo: 'o/svc', path: '/r', defaultBranch: 'main' },
   );
   assert.match(prompt, /issue #7: X/);
-  assert.match(prompt, /Branch: devfleet\/svc\/issue-7/);
+  assert.match(prompt, /Branch: commander\/svc\/issue-7/);
   assert.match(prompt, /why/);
 });

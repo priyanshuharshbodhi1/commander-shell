@@ -1,5 +1,5 @@
 {
-  "name": "devfleet",
+  "name": "commander",
   "version": "0.1.0",
   "private": true,
   "description": "Commander shell for orchestrating a fleet of AI coding agents across repos, runtimes, and trackers",
@@ -15,7 +15,7 @@
     "test": "pnpm -r test",
     "clean": "pnpm -r clean",
     "fleet": "node packages/cli/dist/index.js",
-    "web": "pnpm --filter @devfleet/web dev"
+    "web": "pnpm --filter @commander/web dev"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

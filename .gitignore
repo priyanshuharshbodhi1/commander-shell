@@ -8,4 +8,4 @@ dist
 !.env.example
 coverage
 *.tsbuildinfo
-.devfleet-runtime
+.commander-runtime

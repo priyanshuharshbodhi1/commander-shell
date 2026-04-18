@@ -4,7 +4,7 @@ import type {
   Issue,
   PluginDescriptor,
   Project,
-} from '@devfleet/core';
+} from '@commander/core';
 
 function shellQuote(value: string): string {
   return `"${value.replace(/(["\\$`])/g, '\\$1')}"`;
@@ -21,7 +21,7 @@ export class CodexAgent implements AgentPlugin {
     return [
       `You are working on issue #${issue.id}: ${issue.title}`,
       `Repository: ${project.repo}`,
-      `Branch: devfleet/${project.id}/issue-${issue.id}`,
+      `Branch: commander/${project.id}/issue-${issue.id}`,
       ``,
       `Issue description:`,
       issue.body,

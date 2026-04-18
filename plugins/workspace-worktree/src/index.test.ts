@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import type { Project } from '@devfleet/core';
+import type { Project } from '@commander/core';
 import { WorktreeWorkspace, parsePorcelain, WORKTREES_DIR } from './index.js';
 import { mockExeca, mockFs } from './test-utils.js';
 
@@ -42,17 +42,17 @@ test('WorktreeWorkspace.remove invokes git worktree remove --force then rmSync',
   const { execa, calls } = mockExeca(new Map());
   const fs = mockFs();
   const ws = new WorktreeWorkspace(execa, fs);
-  await ws.remove('/repos/devfleet-worktrees/svc/feature-x');
+  await ws.remove('/repos/commander-worktrees/svc/feature-x');
   assert.deepEqual(calls[0]!.args, [
     'worktree',
     'remove',
     '--force',
-    '/repos/devfleet-worktrees/svc/feature-x',
+    '/repos/commander-worktrees/svc/feature-x',
   ]);
-  assert.deepEqual(fs.rmCalls, ['/repos/devfleet-worktrees/svc/feature-x']);
+  assert.deepEqual(fs.rmCalls, ['/repos/commander-worktrees/svc/feature-x']);
 });
 
-test('WorktreeWorkspace.list returns only devfleet-worktrees entries', async () => {
+test('WorktreeWorkspace.list returns only commander-worktrees entries', async () => {
   const porcelain = [
     'worktree /repos/svc',
     'HEAD abc',

@@ -11,7 +11,7 @@ import type {
   ReviewComment,
   ReviewState,
   SCMPlugin,
-} from '@devfleet/core';
+} from '@commander/core';
 
 interface GhCheckRun {
   name: string;

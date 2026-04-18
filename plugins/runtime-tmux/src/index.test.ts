@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import type { Session } from '@devfleet/core';
+import type { Session } from '@commander/core';
 import { TmuxRuntime } from './index.js';
 import { mockExeca } from './test-utils.js';
 
@@ -23,11 +23,11 @@ test('TmuxRuntime.start invokes new-session then send-keys', async () => {
   assert.equal(calls.length, 2);
   assert.deepEqual(calls[0], {
     file: 'tmux',
-    args: ['new-session', '-d', '-s', 'devfleet-s1', '-c', '/work'],
+    args: ['new-session', '-d', '-s', 'commander-s1', '-c', '/work'],
   });
   assert.deepEqual(calls[1], {
     file: 'tmux',
-    args: ['send-keys', '-t', 'devfleet-s1', 'echo hi', 'Enter'],
+    args: ['send-keys', '-t', 'commander-s1', 'echo hi', 'Enter'],
   });
 });
 
@@ -54,7 +54,7 @@ test('TmuxRuntime.send delivers message with Enter', async () => {
   const { execa, calls } = mockExeca(new Map());
   const r = new TmuxRuntime(execa);
   await r.send('s1', 'hello');
-  assert.deepEqual(calls[0]!.args, ['send-keys', '-t', 'devfleet-s1', 'hello', 'Enter']);
+  assert.deepEqual(calls[0]!.args, ['send-keys', '-t', 'commander-s1', 'hello', 'Enter']);
 });
 
 test('TmuxRuntime.isRunning returns true on success, false on throw', async () => {
@@ -68,12 +68,12 @@ test('TmuxRuntime.getOutput captures the last N lines', async () => {
   const { execa, calls } = mockExeca(new Map([['capture-pane', 'line1\nline2']]));
   const out = await new TmuxRuntime(execa).getOutput('s1', 100);
   assert.equal(out, 'line1\nline2');
-  assert.deepEqual(calls[0]!.args, ['capture-pane', '-t', 'devfleet-s1', '-p', '-S', '-100']);
+  assert.deepEqual(calls[0]!.args, ['capture-pane', '-t', 'commander-s1', '-p', '-S', '-100']);
 });
 
 test('TmuxRuntime.list filters and strips prefix', async () => {
   const { execa } = mockExeca(
-    new Map([['list-sessions', 'devfleet-alpha\nother\ndevfleet-beta\n']]),
+    new Map([['list-sessions', 'commander-alpha\nother\ncommander-beta\n']]),
   );
   const ids = await new TmuxRuntime(execa).list();
   assert.deepEqual(ids, ['alpha', 'beta']);

@@ -5,7 +5,7 @@ import { ConfigError, parseConfig } from './config.js';
 const validYaml = `
 fleet:
   name: demo
-  dataRoot: ./.devfleet
+  dataRoot: ./.commander
 plugins:
   - { kind: runtime, name: tmux, id: default-runtime, options: {} }
   - { kind: agent, name: claude-code, id: primary-agent, options: {} }

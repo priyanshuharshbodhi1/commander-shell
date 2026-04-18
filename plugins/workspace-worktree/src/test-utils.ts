@@ -1,4 +1,4 @@
-import type { ExecaFn, ExecaResult } from '@devfleet/core';
+import type { ExecaFn, ExecaResult } from '@commander/core';
 import type { FsOps } from './index.js';
 
 export interface RecordedCall {

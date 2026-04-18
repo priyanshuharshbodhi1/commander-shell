@@ -7,7 +7,7 @@ import { DataStore } from './data-store.js';
 import type { Session } from './types.js';
 
 async function scratch(): Promise<{ dir: string; cleanup: () => Promise<void> }> {
-  const dir = await mkdtemp(path.join(os.tmpdir(), 'devfleet-ds-'));
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'commander-ds-'));
   return { dir, cleanup: () => rm(dir, { recursive: true, force: true }) };
 }
 

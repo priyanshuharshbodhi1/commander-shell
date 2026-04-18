@@ -1,4 +1,4 @@
-import type { ExecaFn, ExecaResult } from '@devfleet/core';
+import type { ExecaFn, ExecaResult } from '@commander/core';
 
 export interface RecordedCall {
   file: string;

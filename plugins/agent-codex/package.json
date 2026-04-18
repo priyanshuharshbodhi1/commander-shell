@@ -1,5 +1,5 @@
 {
-  "name": "@devfleet/plugin-agent-codex",
+  "name": "@commander/plugin-agent-codex",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -18,7 +18,7 @@
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@devfleet/core": "workspace:*"
+    "@commander/core": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

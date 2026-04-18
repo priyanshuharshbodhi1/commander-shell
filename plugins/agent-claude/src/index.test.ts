@@ -37,7 +37,7 @@ test('ClaudeAgent.buildPrompt embeds issue + project + branch', () => {
   );
   assert.match(prompt, /issue #42: Fix login/);
   assert.match(prompt, /Repository: org\/app/);
-  assert.match(prompt, /Branch: devfleet\/app\/issue-42/);
+  assert.match(prompt, /Branch: commander\/app\/issue-42/);
   assert.match(prompt, /Auth breaks on retry\./);
   assert.match(prompt, /Do not push/);
 });

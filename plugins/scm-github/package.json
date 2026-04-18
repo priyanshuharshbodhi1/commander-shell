@@ -1,5 +1,5 @@
 {
-  "name": "@devfleet/plugin-scm-github",
+  "name": "@commander/plugin-scm-github",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -18,7 +18,7 @@
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@devfleet/core": "workspace:*",
+    "@commander/core": "workspace:*",
     "execa": "^9.5.2"
   },
   "devDependencies": {
